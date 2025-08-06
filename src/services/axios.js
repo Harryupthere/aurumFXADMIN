@@ -1,6 +1,6 @@
 import axios from "axios";
 
-let ReactAppUrl = import.meta.env.VITE_API_URL;
+let ReactAppUrl = 'https://app.arcforyou.com/test/api/v1/admin/'//import.meta.env.VITE_API_URL;
 
 // Create axios instance with the dynamic base URL
 const instance = axios.create({
