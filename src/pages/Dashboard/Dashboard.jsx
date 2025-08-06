@@ -173,6 +173,7 @@ const Dashboard = () => {
                                     <thead>
                                         <tr>
                                             <th>Sr. No.</th>
+                                            <th>Rank</th>
                                             <th>Name</th>
                                             <th>Account Balance</th>
                                             <th>Growth Percentage</th>
@@ -185,6 +186,7 @@ const Dashboard = () => {
                                         {paginatedTraders.map((trader, index) => (
                                             <tr key={trader.id}>
                                                 <td>{startIndex + index + 1}</td>
+                                                <td>{trader.rank_id}</td>
                                                 <td>{trader.name}</td>
                                                 <td className="balance-cell">{formatCurrency(trader?.account_balance)}</td>
                                                 <td className={trader.growth_percentage >= 0 ? 'positive' : 'negative'}>

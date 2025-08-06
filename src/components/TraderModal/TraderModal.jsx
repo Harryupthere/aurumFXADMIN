@@ -6,7 +6,8 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
     name: '',
     account_balance: '',
     growth_percentage: '',
-    platform: 'MetaTrader 4'
+    platform: 'MetaTrader 4',
+    rank_id: ''
   });
 
   useEffect(() => {
@@ -15,14 +16,16 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
         name: trader.name,
         account_balance: trader.account_balance.toString(),
         growth_percentage: trader.growth_percentage.toString(),
-        platform: trader.platform
+        platform: trader.platform,
+        rank_id: trader.rank_id
       });
     } else {
       setFormData({
         name: '',
         account_balance: '',
         growth_percentage: '',
-        platform: 'MetaTrader 4'
+        platform: 'MetaTrader 4',
+        rank_id: ''
       });
     }
   }, [trader, mode, isOpen]);
@@ -33,7 +36,8 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
       name: formData.name,
       account_balance: parseFloat(formData.account_balance),
       growth_percentage: parseFloat(formData.growth_percentage),
-      platform: formData.platform
+      platform: formData.platform,
+      rank_id: parseInt(formData.rank_id)
     });
     onClose();
   };
@@ -119,6 +123,22 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
                   value={formData.growth_percentage}
                   onChange={handleChange}
                   placeholder="Enter growth percentage"
+                  step="0.01"
+                  required
+                />
+              </div>
+            </div>
+            <div className="form-row">
+
+              <div className="form-group">
+                <label htmlFor="rank_id">Rank</label>
+                <input
+                  type="number"
+                  id="rank_id"
+                  name="rank_id"
+                  value={formData.rank_id}
+                  onChange={handleChange}
+                  placeholder="Enter rank"
                   step="0.01"
                   required
                 />

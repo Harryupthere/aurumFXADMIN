@@ -2,13 +2,13 @@
 
 .header {
   height: 60px;
-  background-color: var(--bg-primary);
+  background-color: #2d2d2d;//var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  margin-left: 250px;
+  margin-left: 10px;
   position: sticky;
   top: 0;
   z-index: 50;
@@ -30,7 +30,7 @@
     .page-title {
       font-size: 18px;
       font-weight: 600;
-      color: var(--text-primary);
+      color: #ffffff;
     }
   }
   
@@ -80,7 +80,7 @@
         border: 1px solid var(--border-color);
         border-radius: 6px;
         box-shadow: var(--shadow-md);
-        min-width: 150px;
+        min-width: 0px;
         z-index: 1000;
         
         .dropdown-item {
