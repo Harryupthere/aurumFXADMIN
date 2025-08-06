@@ -1,0 +1,38 @@
+// Theme Variables - Easy to change colors
+:root {
+  // Primary Colors
+  --primary-color: #dc2626;
+  --primary-hover: #b91c1c;
+  --secondary-color: #ffffff;
+  --accent-color: #1a1a1a;
+  
+  // Background Colors
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-dark: #1a1a1a;
+  --bg-sidebar: #2d2d2d;
+  
+  // Text Colors
+  --text-primary: #1a1a1a;
+  --text-secondary: #6b7280;
+  --text-light: #ffffff;
+  --text-muted: #9ca3af;
+  
+  // Border Colors
+  --border-color: #e5e7eb;
+  --border-hover: #d1d5db;
+  
+  // Status Colors
+  --success-color: #10b981;
+  --warning-color: #f59e0b;
+  --error-color: #ef4444;
+  
+  // Shadow
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  
+  // Transitions
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+}
