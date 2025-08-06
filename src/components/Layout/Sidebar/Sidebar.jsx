@@ -5,7 +5,7 @@ import './Sidebar.scss';
 const Sidebar = ({ isOpen, onClose }) => {
   return (
     <>
-      <div className={`sidebar-overlay ${isOpen ? 'open' : ''}`} onClick={onClose} />
+      <div className={` ${isOpen ? 'open' : ''}`} onClick={onClose} />
       <div className={`sidebar ${isOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
           <h2>AurumFX Admin</h2>

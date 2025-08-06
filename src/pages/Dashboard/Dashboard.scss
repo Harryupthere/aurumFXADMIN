@@ -55,6 +55,9 @@
         
         input {
           width: 100%;
+          border: 1px solid #ccc;
+          padding: 15px;
+          border-radius: 6px;
         }
       }
       
@@ -124,8 +127,8 @@
       justify-content: space-between;
       align-items: center;
       margin-top: 20px;
-      padding-top: 20px;
-      border-top: 1px solid var(--border-color);
+      // padding-top: 20px;
+      // border-top: 1px solid var(--border-color);
       
       .pagination-info {
         color: var(--text-secondary);

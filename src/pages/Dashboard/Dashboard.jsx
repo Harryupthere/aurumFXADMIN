@@ -212,7 +212,7 @@ const Dashboard = () => {
                                                 </td>
                                                 <td>{trader.platform}</td>
                                                 <td>{formatDate(trader.created_at)}</td>
-                                                <td>
+                                                <td style={{display:'flex',gap:'10px'}}>
                                                     <button className="btn btn-edit" onClick={() => handleEditTrader(trader)}>
                                                         ✏️
                                                     </button>

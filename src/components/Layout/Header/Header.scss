@@ -1,14 +1,13 @@
 @import '../../../styles/variables.scss';
 
 .header {
-  height: 60px;
+  height: 70px;
   background-color: #2d2d2d;//var(--bg-primary);
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  margin-left: 10px;
   position: sticky;
   top: 0;
   z-index: 50;
@@ -28,7 +27,7 @@
     }
     
     .page-title {
-      font-size: 18px;
+      font-size: 25px;
       font-weight: 600;
       color: #ffffff;
     }
