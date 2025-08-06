@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import './TraderModal.scss';
-
+import { allCountries } from 'country-telephone-data';
 const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
   const [formData, setFormData] = useState({
     name: '',
     account_balance: '',
     growth_percentage: '',
     platform: 'MetaTrader 4',
-    rank_id: ''
+    rank_id: '',
+    country_name: ''
   });
 
   useEffect(() => {
@@ -17,7 +18,8 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
         account_balance: trader.account_balance.toString(),
         growth_percentage: trader.growth_percentage.toString(),
         platform: trader.platform,
-        rank_id: trader.rank_id
+        rank_id: trader.rank_id,
+        country_name: trader.country_name || ''
       });
     } else {
       setFormData({
@@ -25,7 +27,8 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
         account_balance: '',
         growth_percentage: '',
         platform: 'MetaTrader 4',
-        rank_id: ''
+        rank_id: '',
+        country_name: ''
       });
     }
   }, [trader, mode, isOpen]);
@@ -37,7 +40,8 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
       account_balance: parseFloat(formData.account_balance),
       growth_percentage: parseFloat(formData.growth_percentage),
       platform: formData.platform,
-      rank_id: parseInt(formData.rank_id)
+      rank_id: parseInt(formData.rank_id),
+      country_name: formData.country_name
     });
     onClose();
   };
@@ -96,8 +100,25 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
                   <option value="cTrader">cTrader</option>
                   <option value="TradingView">TradingView</option>
                   <option value="NinjaTrader">NinjaTrader</option>
-                </select> */}
+                </select>  */}
               </div>
+              {/* <div className="form-group">
+                <label htmlFor="country_name">Country</label>
+                <select
+                  id="country_name"
+                  name="country_name"
+                  value={formData.country_name}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Country</option>
+                  {allCountries.map((country) => (
+                    <option key={country.iso2} value={country.iso2}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
+              </div> */}
             </div>
             <div className="form-row">
               <div className="form-group">
@@ -142,6 +163,44 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
                   step="0.01"
                   required
                 />
+              </div>
+
+              {/* <div className="form-group">
+                <label htmlFor="country_name">Country</label>
+                <input
+                  type="text"
+                  id="country_name"
+                  name="country_name"
+                  value={formData.country_name}
+                  onChange={handleChange}
+                  placeholder="Enter Country"
+                  required
+                />
+                <select
+                  id="country_name"
+                  name="country_name"
+                  value={formData.country_name}
+                  onChange={handleChange}
+                  required
+                >
+                </select>
+              </div> */}
+              <div className="form-group">
+                <label htmlFor="country_name">Country</label>
+                <select
+                  id="country_name"
+                  name="country_name"
+                  value={formData.country_name}
+                  onChange={handleChange}
+                  required
+                >
+                  <option value="">Select Country</option>
+                  {allCountries.map((country) => (
+                    <option key={country.iso2} value={country.iso2}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
             <div className="form-actions">

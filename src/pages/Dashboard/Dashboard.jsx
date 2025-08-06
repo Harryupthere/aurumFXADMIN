@@ -9,6 +9,7 @@ import { isloginSuccess } from "../../redux/slice/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
+import { allCountries } from 'country-telephone-data';
 
 const Dashboard = () => {
     // Initialize state and hooks
@@ -174,6 +175,7 @@ const Dashboard = () => {
                                         <tr>
                                             <th>Sr. No.</th>
                                             <th>Rank</th>
+                                            <th>Country</th>
                                             <th>Name</th>
                                             <th>Account Balance</th>
                                             <th>Growth Percentage</th>
@@ -187,6 +189,22 @@ const Dashboard = () => {
                                             <tr key={trader.id}>
                                                 <td>{startIndex + index + 1}</td>
                                                 <td>{trader.rank_id}</td>
+                                                <td>
+                                                    {trader.country_name && (
+                                                        <>
+                                                            <img
+                                                                src={`https://flagcdn.com/w20/${trader.country_name.toLowerCase()}.png`}
+                                                                alt={trader.country_name}
+                                                                className="country-flag"
+                                                                style={{ marginRight: 6, verticalAlign: 'middle' }}
+                                                            />
+                                                            {
+                                                                allCountries.find(c => c.iso2 === trader.country_name)?.name ||
+                                                                trader.country_name.toUpperCase()
+                                                            }
+                                                        </>
+                                                    )}
+                                                </td>
                                                 <td>{trader.name}</td>
                                                 <td className="balance-cell">{formatCurrency(trader?.account_balance)}</td>
                                                 <td className={trader.growth_percentage >= 0 ? 'positive' : 'negative'}>
