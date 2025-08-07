@@ -120,11 +120,17 @@ const Dashboard = () => {
 
     // Filter traders
     const filteredTraders = useMemo(() => {
-        return dndTraders.filter(trader =>
-            trader.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            trader.platform.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-    }, [dndTraders, searchTerm]);
+        return dndTraders.filter(trader => {
+            const countryObj = allCountries.find(c => c.iso2 === trader.country_name);
+            const countryDisplayName = countryObj ? countryObj.name.toLowerCase() : '';
+            return (
+                trader.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                trader.platform.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                countryDisplayName.includes(searchTerm.toLowerCase()) ||
+                trader.rank_id.toString().includes(searchTerm.toLowerCase())
+            );
+        });
+    }, [dndTraders, searchTerm, allCountries]);
 
     // Table columns
     const traderColumns = useMemo(
@@ -338,7 +344,7 @@ const Dashboard = () => {
                         </div>
                     </div>
                     <div className="table-responsive">
-                        <h2>Forex Trading Leaderboard (Drag & Drop)</h2>
+                        <h2>Forex Trading Leaderboard </h2>
                         <DndContext
                             sensors={sensors}
                             onDragStart={handleDragStart}
