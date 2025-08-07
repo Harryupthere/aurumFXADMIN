@@ -30,9 +30,10 @@ const useApiRequest = () => {
       if (response?.status || response?.success) {
         return response;
       } else {
-        return {response,message:"Email Or telegram Id already registered. Please try to login."};
+        return {response,message:"Invalid Credentials"};
       }
     } catch (err) {
+      console.error("API request error:", err);
       console.log(err)
       return err;
     } finally {

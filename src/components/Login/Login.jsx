@@ -23,19 +23,13 @@ const Login = () => {
   const handleSubmit = async(e) => {
     e.preventDefault();
     setLoading(true);
-    // // Simulate API call
-    // setTimeout(() => {
-    //   if (username && password) {
-    //     localStorage.setItem('isAuthenticated', 'true');
-    //     navigate('/dashboard');
-    //   }
-    //   setLoading(false);
-    // }, 1000);
+
 
     try{
+      console.log("Login request initiated with username:", username);
         const response = await fetchData(API_ENDPOINTS.LOGIN, navigate, "POST", { username, password });
 
-        
+        console.log(response)
         if (response.success) {
             localStorage.setItem('isAuthenticated', 'true');
              localStorage.setItem("auth_token", response.data.token);
@@ -48,6 +42,7 @@ const Login = () => {
             setLoading(false);
         }
     }catch(error){
+      console.log("Login error:")
         errorMsg(error.message);
         setLoading(false);
         console.error("Login error:", error);

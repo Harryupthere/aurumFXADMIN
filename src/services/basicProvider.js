@@ -92,6 +92,11 @@ class BasicProvider {
       const response = await axios.post(this.url, data);
       return response.data;
     } catch (error) {
+      console.log("Error in postRequest:", error);
+      if(error.status === 401) {
+        // Handle unauthorized access
+        return handleCatchErrors("Invalid Credentials");
+      }
       return handleCatchErrors(error);
     }
   }
