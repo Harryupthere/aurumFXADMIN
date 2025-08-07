@@ -5,16 +5,81 @@ import './Dashboard.scss';
 import useApiRequest from "../../hook/useApiRequest";
 import { API_ENDPOINTS } from "../../constants/endPoints";
 import { successMsg, errorMsg } from "../../utils/customFn";
-import { isloginSuccess } from "../../redux/slice/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { allCountries } from 'country-telephone-data';
+import {
+    DndContext,
+    closestCenter,
+    useSensor,
+    useSensors,
+    MouseSensor,
+    TouchSensor,
+    KeyboardSensor,
+    DragOverlay
+} from "@dnd-kit/core";
+import {
+    arrayMove,
+    SortableContext,
+    verticalListSortingStrategy
+} from "@dnd-kit/sortable";
+import { restrictToVerticalAxis } from "@dnd-kit/modifiers";
+import { useTable } from "react-table";
+import { useSortable } from "@dnd-kit/sortable";
+
+// Drag handle icon
+const DragHandle = (props) => (
+    <span {...props} style={{ cursor: "grab", marginRight: 8 }}>☰</span>
+);
+
+// Draggable row for traders
+function DraggableTraderRow({ row, onEdit, onDelete }) {
+    const { setNodeRef, attributes, listeners, transform, transition, isDragging } =
+        useSortable({ id: row.original.id });
+    const style = {
+        transform: transform ? `translateY(${transform.y}px)` : undefined,
+        transition,
+        background: isDragging ? "#e3f2fd" : "white",
+        cursor: "grab"
+    };
+    return (
+        <tr ref={setNodeRef} style={style} {...row.getRowProps()}>
+            {row.cells.map((cell, i) => (
+                <td {...cell.getCellProps()}>
+                    {i === 0 && <DragHandle {...attributes} {...listeners} />}
+                    {cell.column.id === "action"
+                        ? (
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <button className="btn btn-edit" onClick={() => onEdit(row.original)}>
+                                    ✏️
+                                </button>
+                                <button className="btn btn-delete" onClick={() => onDelete(row.original.id)}>
+                                    🗑️
+                                </button>
+                            </div>
+                        )
+                        : cell.render("Cell")
+                    }
+                </td>
+            ))}
+        </tr>
+    );
+}
+
+// Static row for drag overlay
+function StaticTraderRow({ row }) {
+    return (
+        <tr style={{ outline: "2px solid #3e1eb3", background: "#fff" }} {...row.getRowProps()}>
+            {row.cells.map((cell, i) => (
+                <td {...cell.getCellProps()}>{cell.render("Cell")}</td>
+            ))}
+        </tr>
+    );
+}
 
 const Dashboard = () => {
-    // Initialize state and hooks
     const { fetchData } = useApiRequest();
-    const { auth_token } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
@@ -22,15 +87,18 @@ const Dashboard = () => {
     const [loader, setLoader] = useState(false);
 
     const [searchTerm, setSearchTerm] = useState('');
-    const [currentPage, setCurrentPage] = useState(1);
-    const [itemsPerPage] = useState(5);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('add');
     const [selectedTrader, setSelectedTrader] = useState();
+    const [activeId, setActiveId] = useState(null);
+
+    // Drag-and-drop state
+    const [dndTraders, setDndTraders] = useState([]);
+    const [initialOrder, setInitialOrder] = useState([]);
 
     useEffect(() => {
-        fetchApi()
-    }, [loader])
+        fetchApi();
+    }, [loader]);
     const fetchApi = async () => {
         try {
             const response = await fetchData(API_ENDPOINTS.LEADERBOARD, navigate, "GET", {});
@@ -42,19 +110,104 @@ const Dashboard = () => {
         } catch (error) {
             errorMsg(error.message);
         }
-    }
-    // Filter and paginate traders
+    };
+
+    // Sync dndTraders with traders from API
+    useEffect(() => {
+        setDndTraders(traders);
+        setInitialOrder(traders.map(t => t.id));
+    }, [traders]);
+
+    // Filter traders
     const filteredTraders = useMemo(() => {
-        return traders.filter(trader =>
+        return dndTraders.filter(trader =>
             trader.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             trader.platform.toLowerCase().includes(searchTerm.toLowerCase())
         );
-    }, [traders, searchTerm]);
+    }, [dndTraders, searchTerm]);
 
-    const totalPages = Math.ceil(filteredTraders.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const paginatedTraders = filteredTraders.slice(startIndex, startIndex + itemsPerPage);
+    // Table columns
+    const traderColumns = useMemo(
+        () => [
+            { Header: "Rank", accessor: "rank_id" },
+            {
+                Header: "Country", accessor: "country_name", Cell: ({ value }) => (
+                    value ? (
+                        <>
+                            <img
+                                src={`https://flagcdn.com/w20/${value.toLowerCase()}.png`}
+                                alt={value}
+                                className="country-flag"
+                                style={{ marginRight: 6, verticalAlign: 'middle' }}
+                            />
+                            {allCountries.find(c => c.iso2 === value)?.name || value.toUpperCase()}
+                        </>
+                    ) : null
+                )
+            },
+            { Header: "Name", accessor: "name" },
+            { Header: "Account Balance", accessor: "account_balance", Cell: ({ value }) => formatCurrency(value) },
+            {
+                Header: "Growth %", accessor: "growth_percentage", Cell: ({ value }) => (
+                    <span className={value >= 0 ? 'positive' : 'negative'}>{value}%</span>
+                )
+            },
+            { Header: "Platform", accessor: "platform" },
+            { Header: "Created At", accessor: "created_at", Cell: ({ value }) => formatDate(value) },
+            {
+                Header: "Action",
+                accessor: "action",
+                id: "action",
+                Cell: () => null // handled in DraggableTraderRow
+            }
+        ],
+        [allCountries]
+    );
 
+    // React Table setup
+    const {
+        getTableProps,
+        getTableBodyProps,
+        headerGroups,
+        rows,
+        prepareRow
+    } = useTable({ columns: traderColumns, data: filteredTraders });
+
+    // Dnd-kit sensors
+    const sensors = useSensors(
+        useSensor(MouseSensor),
+        useSensor(TouchSensor),
+        useSensor(KeyboardSensor)
+    );
+    const items = useMemo(() => filteredTraders.map((row) => row.id), [filteredTraders]);
+
+    // Drag events
+    function handleDragStart(event) {
+        setActiveId(event.active.id);
+    }
+    function handleDragEnd(event) {
+        const { active, over } = event;
+        if (active.id !== over.id) {
+            setDndTraders((prev) => {
+                const oldIndex = prev.findIndex(t => t.id === active.id);
+                const newIndex = prev.findIndex(t => t.id === over.id);
+                return arrayMove(prev, oldIndex, newIndex);
+            });
+        }
+        setActiveId(null);
+    }
+    function handleDragCancel() {
+        setActiveId(null);
+    }
+
+    const selectedRow = useMemo(() => {
+        if (!activeId) return null;
+        const row = rows.find(({ original }) => original.id === activeId);
+        if (row) prepareRow(row);
+        return row;
+    }, [activeId, rows, prepareRow]);
+
+    // Modal handlers
     const handleAddTrader = () => {
         setModalMode('add');
         setSelectedTrader(undefined);
@@ -100,7 +253,6 @@ const Dashboard = () => {
             if (modalMode === 'add') {
                 let addTrader = await fetchData(API_ENDPOINTS.ADD_LEADERBOARD, navigate, "POST", traderData);
                 if (addTrader.success) {
-                    //setTraders([...traders, addTrader.data]);
                     setLoader(false);
                     successMsg('Trader added successfully');
                 } else {
@@ -108,7 +260,7 @@ const Dashboard = () => {
                     errorMsg(addTrader.message);
                 }
             } else if (selectedTrader) {
-                let updateTrader = await fetchData(API_ENDPOINTS.UPDATE_LEADERBOARD+ `/${selectedTrader.id}`, navigate, "PUT", traderData);
+                let updateTrader = await fetchData(API_ENDPOINTS.UPDATE_LEADERBOARD + `/${selectedTrader.id}`, navigate, "PUT", traderData);
                 if (updateTrader.success) {
                     setLoader(false);
                     successMsg('Trader updated successfully');
@@ -117,7 +269,6 @@ const Dashboard = () => {
                     errorMsg(updateTrader.message);
                 }
             }
-
         } catch (error) {
             setLoader(false);
             errorMsg(error.message);
@@ -141,6 +292,26 @@ const Dashboard = () => {
         });
     };
 
+    // Save order button handler
+    const handleSaveOrder = async () => {
+        const reordered = dndTraders.map((trader, idx) => ({
+            id: trader.id,
+            rank_id: idx + 1
+        }));
+        try {
+          let response = await fetchData(API_ENDPOINTS.UPDATE_LEADERBOARD_ORDER, navigate, "PUT", { order: reordered });
+          if( response.success) {
+            successMsg("Order saved!");
+            setInitialOrder(dndTraders.map(t => t.id)); // update initial order
+            setLoader(true); // reload data
+          } else {
+            errorMsg(response.message);
+          }
+        } catch (error) {
+            errorMsg(error.message);
+        }
+    };
+
     return (
         <Layout title="Leaderboard">
             <div className="dashboard">
@@ -162,110 +333,65 @@ const Dashboard = () => {
                                 value={searchTerm}
                                 onChange={(e) => {
                                     setSearchTerm(e.target.value);
-                                    setCurrentPage(1);
                                 }}
                             />
                         </div>
                     </div>
-                    {paginatedTraders.length > 0 ? (
-                        <>
-                            <div className="table-responsive">
-                                <table className="leaderboard-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Sr. No.</th>
-                                            <th>Rank</th>
-                                            <th>Country</th>
-                                            <th>Name</th>
-                                            <th>Account Balance</th>
-                                            <th>Growth Percentage</th>
-                                            <th>Platform</th>
-                                            <th>Created At</th>
-                                            <th>Action</th>
+                    <div className="table-responsive">
+                        <h2>Forex Trading Leaderboard (Drag & Drop)</h2>
+                        <DndContext
+                            sensors={sensors}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                            onDragCancel={handleDragCancel}
+                            collisionDetection={closestCenter}
+                            modifiers={[restrictToVerticalAxis]}
+                        >
+                            <table {...getTableProps()} className="leaderboard-table">
+                                <thead>
+                                    {headerGroups.map((headerGroup) => (
+                                        <tr {...headerGroup.getHeaderGroupProps()}>
+                                            {headerGroup.headers.map((column) => (
+                                                <th {...column.getHeaderProps()}>{column.render("Header")}</th>
+                                            ))}
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        {paginatedTraders.map((trader, index) => (
-                                            <tr key={trader.id}>
-                                                <td>{startIndex + index + 1}</td>
-                                                <td>{trader.rank_id}</td>
-                                                <td>
-                                                    {trader.country_name && (
-                                                        <>
-                                                            <img
-                                                                src={`https://flagcdn.com/w20/${trader.country_name.toLowerCase()}.png`}
-                                                                alt={trader.country_name}
-                                                                className="country-flag"
-                                                                style={{ marginRight: 6, verticalAlign: 'middle' }}
-                                                            />
-                                                            {
-                                                                allCountries.find(c => c.iso2 === trader.country_name)?.name ||
-                                                                trader.country_name.toUpperCase()
-                                                            }
-                                                        </>
-                                                    )}
-                                                </td>
-                                                <td>{trader.name}</td>
-                                                <td className="balance-cell">{formatCurrency(trader?.account_balance)}</td>
-                                                <td className={trader.growth_percentage >= 0 ? 'positive' : 'negative'}>
-                                                    {trader.growth_percentage}%
-                                                </td>
-                                                <td>{trader.platform}</td>
-                                                <td>{formatDate(trader.created_at)}</td>
-                                                <td style={{display:'flex',gap:'10px'}}>
-                                                    <button className="btn btn-edit" onClick={() => handleEditTrader(trader)}>
-                                                        ✏️
-                                                    </button>
-                                                    <button className="btn btn-delete" onClick={() => handleDeleteTrader(trader.id)}>
-                                                        🗑️
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <div className="pagination">
-                                <div className="pagination-info">
-                                    Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredTraders.length)} of {filteredTraders.length} entries
-                                </div>
-                                <div className="pagination-controls">
-                                    <button
-                                        className="btn page-btn"
-                                        onClick={() => setCurrentPage(currentPage - 1)}
-                                        disabled={currentPage === 1}
-                                    >
-                                        ‹
-                                    </button>
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                                        <button
-                                            key={page}
-                                            className={`btn page-btn ${currentPage === page ? 'active' : ''}`}
-                                            onClick={() => setCurrentPage(page)}
-                                        >
-                                            {page}
-                                        </button>
                                     ))}
-                                    <button
-                                        className="btn page-btn"
-                                        onClick={() => setCurrentPage(currentPage + 1)}
-                                        disabled={currentPage === totalPages}
-                                    >
-                                        ›
-                                    </button>
-                                </div>
-                            </div>
-                        </>
-                    ) : (
-                        <div className="empty-state">
-                            <div className="empty-icon">📊</div>
-                            <h3>No traders found</h3>
-                            <p>No traders match your search criteria. Try adjusting your search or add a new trader.</p>
-                            <button className="btn btn-primary" onClick={handleAddTrader}>
-                                Add First Trader
-                            </button>
-                        </div>
-                    )}
+                                </thead>
+                                <tbody {...getTableBodyProps()}>
+                                    <SortableContext items={items} strategy={verticalListSortingStrategy}>
+                                        {rows.map((row) => {
+                                            prepareRow(row);
+                                            return (
+                                                <DraggableTraderRow
+                                                    key={row.original.id}
+                                                    row={row}
+                                                    onEdit={handleEditTrader}
+                                                    onDelete={handleDeleteTrader}
+                                                />
+                                            );
+                                        })}
+                                    </SortableContext>
+                                </tbody>
+                            </table>
+                            <DragOverlay>
+                                {activeId && selectedRow && (
+                                    <table style={{ width: "100%" }}>
+                                        <tbody>
+                                            <StaticTraderRow row={selectedRow} />
+                                        </tbody>
+                                    </table>
+                                )}
+                            </DragOverlay>
+                        </DndContext>
+                        <button
+                            style={{ marginTop: 16 }}
+                            disabled={JSON.stringify(dndTraders.map(t => t.id)) === JSON.stringify(initialOrder)}
+                            onClick={handleSaveOrder}
+                            className="btn btn-primary"
+                        >
+                            Save Order
+                        </button>
+                    </div>
                 </div>
                 <TraderModal
                     isOpen={isModalOpen}

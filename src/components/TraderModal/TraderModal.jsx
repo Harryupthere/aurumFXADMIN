@@ -7,7 +7,7 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
     account_balance: '',
     growth_percentage: '',
     platform: 'MetaTrader 4',
-    rank_id: '',
+    //rank_id: '',
     country_name: ''
   });
 
@@ -18,7 +18,7 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
         account_balance: trader.account_balance.toString(),
         growth_percentage: trader.growth_percentage.toString(),
         platform: trader.platform,
-        rank_id: trader.rank_id,
+        //rank_id: trader.rank_id,
         country_name: trader.country_name || ''
       });
     } else {
@@ -27,7 +27,7 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
         account_balance: '',
         growth_percentage: '',
         platform: 'MetaTrader 4',
-        rank_id: '',
+        //rank_id: '',
         country_name: ''
       });
     }
@@ -40,7 +40,7 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
       account_balance: parseFloat(formData.account_balance),
       growth_percentage: parseFloat(formData.growth_percentage),
       platform: formData.platform,
-      rank_id: parseInt(formData.rank_id),
+      //rank_id: parseInt(formData.rank_id),
       country_name: formData.country_name
     });
     onClose();
@@ -151,7 +151,7 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
             </div>
             <div className="form-row">
 
-              <div className="form-group">
+              {/* <div className="form-group">
                 <label htmlFor="rank_id">Rank</label>
                 <input
                   type="number"
@@ -163,7 +163,7 @@ const TraderModal = ({ isOpen, onClose, onSubmit, trader, mode }) => {
                   step="0.01"
                   required
                 />
-              </div>
+              </div> */}
 
               {/* <div className="form-group">
                 <label htmlFor="country_name">Country</label>
